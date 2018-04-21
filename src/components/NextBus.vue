@@ -70,7 +70,7 @@ export default Vue.extend({
                     times.sort();
 
                     var soon = (times.filter((t) => (t - now) < hour));
-                    this.nextBusTimes = (soon.length > 0) ? soon : times.slice(0, 1);
+                    this.nextBusTimes = (soon.length > 0) ? soon.slice(0, 4) : times.slice(0, 1);
                 });
 
             window.setTimeout(this.getNextBus.bind(this), minute);

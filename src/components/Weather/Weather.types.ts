@@ -1,40 +1,40 @@
 type WeatherIcon = 'clear-day'|'clear-night'|'rain'|'snow'|'sleet'|'wind'|'fog'|'cloudy'|'partly-cloudy-day'|'partly-cloudy-night';
 
 class DataPoint {
-    public apparentTemperature?:number;
-    public cloudCover?:number;
-    public dewPoint?:number;
-    public humidity?:number;
-    public icon?:WeatherIcon;
-    public precipIntensity?:number;
-    public precipProbability?:number;
-    public precipType?:'rain'|'snow'|'sleet';
-    public temperature?:number;
-    public time:number = 0;
-    public visibility:number = 10;
-    public windBearing?:number;
-    public windGust?:number;
-    public windSpeed?:number;
-    public summary?:string;
+    apparentTemperature?:number;
+    cloudCover?:number;
+    dewPoint?:number;
+    humidity?:number;
+    icon?:WeatherIcon;
+    precipIntensity?:number;
+    precipProbability?:number;
+    precipType?:'rain'|'snow'|'sleet';
+    temperature?:number;
+    time:number = 0;
+    visibility:number = 0;
+    windBearing?:number;
+    windGust?:number;
+    windSpeed?:number;
+    summary?:string;
 }
 
 class DataPointDaily extends DataPoint {
-    public apparentTemperatureHigh?:number;
-    public apparentTemperatureLow?:number;
-    public moonPhase?:number;
-    public precipIntensityMax?:number;
-    public temperatureHigh?:number;
-    public temperatureLow?:number;
+    apparentTemperatureHigh?:number;
+    apparentTemperatureLow?:number;
+    moonPhase?:number;
+    precipIntensityMax?:number;
+    temperatureHigh?:number;
+    temperatureLow?:number;
 }
 
 class DataBlock {
-    public data:DataPoint[] = [];
-    public summary?:string;
-    public icon?:WeatherIcon;
+    data:DataPoint[] = [];
+    summary?:string;
+    icon?:WeatherIcon;
 }
 
-class DataBlockDaily extends DataBlock {
-    public data:DataPointDaily[] = [];
+interface DataBlockDaily extends DataBlock {
+    data:DataPointDaily[];
 }
 
 export { WeatherIcon , DataPoint, DataPointDaily , DataBlock, DataBlockDaily }

@@ -17,6 +17,11 @@ export default Vue.extend({
     DateTime,
     NextBus,
     Weather
+  },
+  mounted() {
+    if (navigator.appVersion.indexOf('Windows')) {
+      document.body.classList.add('windows');
+    }
   }
 });
 </script>
@@ -32,6 +37,10 @@ html, body {
   color: #FFF;
   font-family: 'Roboto', sans-serif;
   cursor: none;
+
+  &.windows {
+    cursor: default;
+  }
 }
 </style>
 

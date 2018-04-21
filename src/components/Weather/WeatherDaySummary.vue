@@ -72,7 +72,6 @@ export default Vue.extend({
 
 <style lang="scss" scoped>
 .weather-day-card {
-    background-color: rgba(255, 255, 255, 0.05);
     width: 200px;
     margin: 10px;
     height: 240px;

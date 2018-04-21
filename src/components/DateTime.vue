@@ -23,7 +23,7 @@ export default Vue.extend({
         date():String {
             const months = [ 'januari', 'februari', 'maart', 'april', 'mei', 'juni', 'juli', 'augustus', 'september', 'oktober', 'november', 'december'];
             const day = this.datetime.getDate();
-            const month = months[this.datetime.getMonth() + 1];
+            const month = months[this.datetime.getMonth()];
             const year = this.datetime.getFullYear();
             return `${day} ${month}, ${year}`;
         }
