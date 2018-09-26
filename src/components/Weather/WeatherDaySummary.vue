@@ -25,13 +25,13 @@ const dateStr = (timestamp:number):string => {
 
 export default Vue.extend({
     props: {
-        data: [DataPointDaily, Object]
+        data: Object as () => DataPointDaily
     },
     computed: {
         temperature():any {
             return {
-                high: Math.round(this.data.temperatureHigh),
-                low: Math.round(this.data.temperatureLow)
+                high: this.data.temperatureHigh ? Math.round(this.data.temperatureHigh) : 0,
+                low: this.data.temperatureLow ? Math.round(this.data.temperatureLow) : 0
             };
         },
         icon():string {
@@ -57,15 +57,6 @@ export default Vue.extend({
                 intensity: this.data.precipIntensity || 0
             };
         }
-    },
-    mounted() {
-        this.data.temperatureLow;
-        this.data.temperatureHigh;
-        this.data.icon;
-        this.data.time;
-        this.data.summary;
-        this.data.precipProbability;
-        this.data.precipIntensity;
     }
 });
 </script>

@@ -11,16 +11,17 @@ import Vue from 'vue';
 import { WeatherIcon, DataPoint, DataPointDaily, DataBlock, DataBlockDaily } from './Weather/Weather.types';
 import WeatherDaySummary from './Weather/WeatherDaySummary.vue';
 import WeatherGraph from './Weather/WeatherGraph.vue';
+import config from '../config';
 
 const interval = 15 * 60 * 1000;
 
-class ResponseData {
-    public latitude:number = 0;
-    public longitude:number = 0;
-    public timezone:string = '';
-    public currently?:DataPoint;
-    public hourly?:DataBlock;
-    public daily?:DataBlockDaily;
+interface ResponseData {
+    latitude:number;
+    longitude:number;
+    timezone:string;
+    currently?:DataPoint;
+    hourly?:DataBlock;
+    daily?:DataBlockDaily;
 }
 
 class ComponentData {
@@ -30,22 +31,6 @@ class ComponentData {
     public daily:DataBlockDaily|null = null;
     public updateInterval:number = 0;
 }
-
-const getForecast:Function = (() => {
-    const latitude = 53.227910;
-    const longitude = 6.569886
-    const exclude = ['minutely', 'alerts', 'flags'].join(',');
-    const ApiURL = `https://api.darksky.net/forecast/{APIKEY}/${latitude},${longitude}?exclude=${exclude}&lang=nl&units=ca`;
-    const proxyURL = './weather.php';
-    return function (latitude:number, longitude:number):Promise<Response> {
-        const formdata = new FormData();
-        formdata.append('url', `${ApiURL}`);
-        return fetch(proxyURL, {
-            method: 'POST',
-            body: formdata
-        });
-    };
-})();
 
 export default Vue.extend({
     data: ():ComponentData => ({
@@ -59,7 +44,7 @@ export default Vue.extend({
     },
     methods: {
         update() {
-            getForecast()
+            fetch(config.WEATHER_API_URL)
                 .then((response:Response) => response.json())
                 .then((data:ResponseData) => {
                     if(data.daily) {

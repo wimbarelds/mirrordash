@@ -1,6 +1,6 @@
 type WeatherIcon = 'clear-day'|'clear-night'|'rain'|'snow'|'sleet'|'wind'|'fog'|'cloudy'|'partly-cloudy-day'|'partly-cloudy-night';
 
-class DataPoint {
+interface DataPoint {
     apparentTemperature?:number;
     cloudCover?:number;
     dewPoint?:number;
@@ -10,15 +10,15 @@ class DataPoint {
     precipProbability?:number;
     precipType?:'rain'|'snow'|'sleet';
     temperature?:number;
-    time:number = 0;
-    visibility:number = 0;
+    time:number;
+    visibility:number;
     windBearing?:number;
     windGust?:number;
     windSpeed?:number;
     summary?:string;
 }
 
-class DataPointDaily extends DataPoint {
+interface DataPointDaily extends DataPoint {
     apparentTemperatureHigh?:number;
     apparentTemperatureLow?:number;
     moonPhase?:number;
@@ -27,8 +27,8 @@ class DataPointDaily extends DataPoint {
     temperatureLow?:number;
 }
 
-class DataBlock {
-    data:DataPoint[] = [];
+interface DataBlock {
+    data:DataPoint[];
     summary?:string;
     icon?:WeatherIcon;
 }

@@ -2,17 +2,20 @@
     <div class="weather-graph">
         <svg width="100%" height="240" v-if="loaded">
             <g id="yRange1">
-                <text v-for="yPoint in yPoints1.range" :key="yPoint.value" :x="margin - 5" :y="yPoint.pos" fill="#FFF" text-anchor="end" dominant-baseline="middle">{{ yPoint.text }}</text>
+                <text v-for="yPoint in yPoints1.range" :key="yPoint.value" :x="margins.x - 5" :y="yPoint.pos" fill="#FF7" text-anchor="end" dominant-baseline="middle">{{ yPoint.text }}</text>
             </g>
             <g id="yRange2">
-                <text v-for="yPoint in yPoints2.range" :key="yPoint.value" :x="width - margin + 5" :y="yPoint.pos" fill="#FFF" text-anchor="start" dominant-baseline="middle">{{ yPoint.text }}</text>
+                <text v-for="yPoint in yPoints2.range" :key="yPoint.value" :x="size.x - margins.x + 5" :y="yPoint.pos" fill="#ACF" text-anchor="start" dominant-baseline="middle">{{ yPoint.text }}</text>
             </g>
             <g id="xRange">
-                <text v-for="xPoint in xPoints.range" :key="xPoint.value" :x="xPoint.pos" :y="height - margin + 5" fill="#FFF" text-anchor="middle" dominant-baseline="hanging">{{ xPoint.text }}</text>
+                <text v-for="xPoint in xPoints.range" :key="xPoint.value" :x="xPoint.pos" :y="size.y - margins.y + 10" fill="#FFF" text-anchor="middle" dominant-baseline="hanging">{{ xPoint.text }}</text>
             </g>
-            <path :d="temperaturePath" stroke="#FF0" stroke-width="1" fill="rgba(255, 255, 0, 0.05)" />
-            <path :d="precipitationPath" stroke="#36F" stroke-width="1" fill="rgba(30, 60, 255, 0.05)" />
-            <path :d="`M ${margin} ${margin} L ${margin} 210 L ${width - margin} 210 L ${width - margin} ${margin}`" stroke="#FFF" stroke-width="2" fill="transparent" />
+            <!-- <graph-line color="#FF0" :x-range="xRange" :y-range="yRange1" :data="temperature" :scaler="scaler" /> -->
+            <graph-temperature :x-range="xRange" :y-range="yRange1" :data="temperature" :scaler="scaler" />
+            <graph-precipitation :x-range="xRange" :y-range="yRange2" :data="precipitation" :scaler="scaler" />
+            <!-- <graph-line color="#36F" :x-range="xRange" :y-range="yRange2" :data="precipitation" :scaler="scaler" /> -->
+            
+            <path :d="`M ${margins.x} ${margins.y} L ${margins.x} 210 L ${size.x - margins.x} 210 L ${size.x - margins.x} ${margins.y}`" stroke="#FFF" stroke-width="2" fill="transparent" />
         </svg>
     </div>
 </template>
@@ -20,46 +23,38 @@
 <script lang="ts">
 import Vue from 'vue'
 import { DataPoint, DataBlock } from './Weather.types';
+import { Point, PrecipitationPoint, RangePoint, Range, Scaler } from './WeatherGraph/GraphTools';
 
-let width:number = 1440;
-const height:number = 240;
-const margin:number = 30;
+import GraphLine from './WeatherGraph/GraphLine.vue';
+import GraphTemperature from './WeatherGraph/GraphTemperature.vue';
+import GraphPrecipitation from './WeatherGraph/GraphPrecipitation.vue';
 
-const scaleX = (pct:number):number => Math.round(margin + ((width - (margin * 2)) * pct));
-const scaleY = (pct:number):number => height - Math.round(margin + ((height - (margin * 2)) * pct));
-
-class Point {
-    public x:number = 0;
-    public y:number = 0;
+const size:Point = {
+    x: 1440,
+    y: 240
+}
+const margins:Point = {
+    x: 50,
+    y: 30
 }
 
-class RangePoint {
-    public value:number = 0;
-    public text:string = '';
-    public pos:number = 0;
-}
-
-class Range {
-    public min:number = 0;
-    public max:number = 30;
-    public range:RangePoint[] = [];
-}
-
-class ComponentData {
-    public yRange1:Range|null = null;
-    public yRange2:Range|null = null;
-    public xRange:Range|null = null;
-    public temperature:Point[] = [];
-    public precipitation:Point[] = [];
-    public loaded:boolean = false;
-    public width:number = 1440;
-    public height:number = 240;
-    public margin:number = 40;
+interface ComponentData {
+    yRange1:Range|null;
+    yRange2:Range|null;
+    xRange:Range|null;
+    temperature:Point[];
+    precipitation:PrecipitationPoint[];
+    loaded:boolean;
+    size:Point;
+    margins:Point;
+    scaler:Scaler;
 }
 
 export default Vue.extend({
     props: {
-        data: [DataBlock, Object]
+        data: {
+            type: Object as () => DataBlock
+        }
     },
     data: ():ComponentData => ({
         yRange1: null,
@@ -68,9 +63,9 @@ export default Vue.extend({
         temperature: [],
         precipitation: [],
         loaded: false,
-        width: width,
-        height: height,
-        margin: margin,
+        size: size,
+        margins: margins,
+        scaler: new Scaler(size, margins)
     }),
     computed: {
         xPoints():Range|null {
@@ -83,7 +78,7 @@ export default Vue.extend({
             };
 
             computedRange.range.forEach((rangePoint:RangePoint) => {
-                rangePoint.pos = scaleX((rangePoint.value - computedRange.min) / (computedRange.max - computedRange.min));
+                rangePoint.pos = this.scaler.x((rangePoint.value - computedRange.min) / (computedRange.max - computedRange.min));
             });
 
             return computedRange;
@@ -97,7 +92,7 @@ export default Vue.extend({
             };
 
             computedRange.range.forEach((rangePoint:RangePoint) => {
-                rangePoint.pos = scaleY((rangePoint.value - computedRange.min) / (computedRange.max - computedRange.min));
+                rangePoint.pos = this.scaler.y((rangePoint.value - computedRange.min) / (computedRange.max - computedRange.min));
             });
 
             return computedRange;
@@ -111,43 +106,11 @@ export default Vue.extend({
             };
 
             computedRange.range.forEach((rangePoint:RangePoint) => {
-                rangePoint.pos = scaleY((rangePoint.value - computedRange.min) / (computedRange.max - computedRange.min));
+                rangePoint.pos = this.scaler.y((rangePoint.value - computedRange.min) / (computedRange.max - computedRange.min));
             });
 
             return computedRange;
         },
-        temperaturePath():string {
-            let paths:string[] = [];
-            if (this.xRange && this.yRange1) {
-                paths.push('M ' + scaleX(1) + ' ' + scaleY(0));
-                paths.push('L ' + scaleX(0) + ' ' + scaleY(0));
-                for (let i = 0; i < this.temperature.length; i++) {
-                    let value:Point = this.temperature[i];
-                    let x = scaleX((value.x - this.xRange.min) / (this.xRange.max - this.xRange.min));
-                    let y = scaleY((value.y - this.yRange1.min) / (this.yRange1.max - this.yRange1.min));
-                    paths.push(`L ${x} ${y}`);
-                }
-                paths.push(paths[0]);
-            }
-            return paths.join(' ');
-        },
-        precipitationPath():string {
-            let paths:string[] = [];
-            if (this.xRange && this.yRange2) {
-                paths.push('M ' + scaleX(1) + ' ' + scaleY(0));
-                paths.push('L ' + scaleX(0) + ' ' + scaleY(0));
-                for (let i = 0; i < this.precipitation.length; i++) {
-                    let value:Point = this.precipitation[i];
-                    let x = scaleX((value.x - this.xRange.min) / (this.xRange.max - this.xRange.min));
-                    let y = scaleY((value.y - this.yRange2.min) / (this.yRange2.max - this.yRange2.min));
-                    paths.push(`L ${x} ${y}`);
-                }
-                paths.push(paths[0]);
-            }
-            let path:string = paths.join(' ');
-            console.log(path);
-            return path;
-        }
     },
     methods: {
         setYRange1(values:number[]) {
@@ -164,7 +127,7 @@ export default Vue.extend({
             for (let rangePoint = minRounded; rangePoint <= maxRounded; rangePoint += 10) {
                 range.push({
                     value: rangePoint,
-                    text: rangePoint.toString(),
+                    text: rangePoint.toString() + '°',
                     pos: 0
                 });
             }
@@ -187,7 +150,7 @@ export default Vue.extend({
             for (let rangePoint = minVal; rangePoint <= maxVal; rangePoint += 0.2) {
                 range.push({
                     value: rangePoint,
-                    text: Math.floor(rangePoint * 100).toString(),
+                    text: Math.floor(rangePoint * 100).toString() + '%',
                     pos: 0
                 });
             }
@@ -211,7 +174,7 @@ export default Vue.extend({
                 let date = new Date(rangePoint);
                 range.push({
                     value: rangePoint,
-                    text: date.getHours().toString(),
+                    text: date.getHours().toString() + ':00',
                     pos: 0
                 });
             }
@@ -223,7 +186,7 @@ export default Vue.extend({
             };
         },
         update() {
-            const hours:DataPoint[] = this.data.data.slice(0, 24);
+            const hours:DataPoint[] = (this.data).data.slice(0, 24);
             const temperatureValues:number[] = [];
             const precipitationProbability:number[] = [];
             const times:number[] = [];
@@ -234,7 +197,14 @@ export default Vue.extend({
                 if (hour && hour.precipProbability) precipitationProbability.push(hour.precipProbability);
                 if (hour && hour.time) times.push(hour.time * 1000);
                 if (hour && hour.temperature && hour.time) this.temperature.push({ x: hour.time * 1000, y: hour.temperature });
-                if (hour && hour.precipProbability && hour.time) this.precipitation.push({ x: hour.time * 1000, y: hour.precipProbability });
+                if (hour && hour.time){
+                    if (hour.precipProbability && hour.precipIntensity) {
+                        this.precipitation.push({ x: hour.time * 1000, y: hour.precipProbability, h: hour.precipIntensity });
+                    }
+                    else {
+                        this.precipitation.push({ x: hour.time * 1000, y: 0, h: 0 });
+                    }
+                }
             });
             this.setYRange1(temperatureValues);
             this.setYRange2(precipitationProbability);
@@ -247,9 +217,14 @@ export default Vue.extend({
         }
     },
     mounted() {
-        this.width = width = this.$el.offsetWidth;
+        this.size.x = this.$el.offsetWidth;
         this.update();
         this.loaded = true;
+    },
+    components: {
+        GraphLine,
+        GraphTemperature,
+        GraphPrecipitation
     }
 });
 </script>
@@ -257,7 +232,6 @@ export default Vue.extend({
 <style lang="scss" scoped>
     .weather-graph {
         margin: 10px;
-        background-color: rgba(255, 255, 255, 0.05);
         flex: 1;
     }
 </style>

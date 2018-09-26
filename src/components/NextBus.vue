@@ -13,15 +13,16 @@
 <script lang="ts">
 import Vue from 'vue';
 import { setInterval, setTimeout } from 'timers';
+import config from '../config';
 
-class ComponentData {
-    public nextBusTimes: number[] = [];
-    public nextBusTimeout: number = 0;
+interface ComponentData {
+    nextBusTimes: number[];
+    nextBusTimeout: number;
 }
 
-class NextBus {
-    public time: string = "";
-    public unit: string = "";
+interface NextBus {
+    time: string;
+    unit: string;
 }
 
 const second = 1000;
@@ -50,7 +51,7 @@ export default Vue.extend({
     },
     methods: {
         getNextBus() {
-            fetch('./ov.php')
+            fetch(config.NEXTBUS_API_URL)
                 .then((r) => r.json())
                 .then((data) => {
                     const now:number = Date.now();
@@ -71,13 +72,17 @@ export default Vue.extend({
 
                     var soon = (times.filter((t) => (t - now) < hour));
                     this.nextBusTimes = (soon.length > 0) ? soon.slice(0, 4) : times.slice(0, 1);
+                })
+                .catch((e) => {
+                    this.nextBusTimes = this.nextBusTimes.slice(); // Force Update nextBusTimes with current data so that it re-renders
+                    console.error('Error fetching next busses', e);
                 });
 
             window.setTimeout(this.getNextBus.bind(this), minute);
         }
     },
     mounted() {
-        this.getNextBus()
+        this.getNextBus();
     },
     beforeDestroy() {
         window.clearTimeout(this.nextBusTimeout);
